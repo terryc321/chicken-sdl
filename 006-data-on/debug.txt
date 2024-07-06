@@ -1,0 +1,236 @@
+  #|
+
+  board = grid + some other data regarding where hole is , where gold is 
+    
+  up!
+  down!
+  left!
+  right!
+
+  func-up
+  func-down
+  func-left
+  func-right
+  
+  |#
+  
+  ;; just a throwaway routine find hole 
+  (define find-start
+    (lambda (g)
+      (let ((wid (g:wid g))
+	    (hgt (g:hgt g)))
+      (do-list (x (cdr (iota (+ wid 1))))
+	       (do-list (y (cdr (iota (+ hgt 1))))
+			(let ((expr (g:xy g x y)))
+			  (match expr
+			    (('used used 'size size)
+			     (cond
+			      ((= used 0)
+			       (format #t "found at ~a ~a ~%" x y)
+			       ))))))))))
+  
+  
+
+  
+  #|
+  may not be able to go in direction wish
+  may be on border of board
+  x = 1 cannot go left
+  x = width cannot go right
+  y = 1 canno go up
+  y = height cannot go down
+  limitations on actual puzzle constraints 
+
+  used2 size2 
+  20 30
+  .
+  /|\
+  |
+  |
+  10 70
+  used size
+
+  used fits into size2
+  used2 fits into size
+  then swap compatible
+
+  |#
+
+  ;; can go up if y > 1 
+  (define func-up
+    (lambda (state)
+      (let* ((hole (state-hole state))
+	     (gold (state-gold state))
+	     (hole-x (first hole))
+	     (hole-y (second hole))
+	     (gold-x (first gold))
+	     (gold-y (second gold))
+	     (grid (state-grid state)))
+      (call/cc
+       (lambda (exit) 
+	 (cond
+	  ((> hole-y 1)
+	   (format #t "*current-y* > 1  ~%")		 
+	   (let* ((x hole-x)(y hole-y)(x2 x)(y2 (- y 1)))
+	     (let ((expr (g:xy grid x y))
+		   (expr2 (g:xy grid x2 y2)))
+	       (format #t "expr : ~A ~%" expr)
+	       (format #t "expr2 : ~A ~%" expr2)		     
+	       (match expr (('used used 'size size)
+			    (format #t "match expr : ~A : used=~a : size = ~a ~%" expr used size)
+			    (match expr2 (('used used2 'size size2)
+					  (format #t "<inner expr2 match okay>  ~%")
+					  (cond
+					   ((and (<= used size2) (<= used2 size))
+					    (format #t "<inner expr2 match okay>  ~%")
+					    
+					    (let ((copy (g:copy grid)))
+					      (g:xy! copy x y `(used ,used2 size ,size))
+					      (g:xy! copy x2 y2 `(used ,used size ,size2))
+					      
+					      ;; hole is at x , y
+					      ;; gold is at x2 y2 ... gold is now at x y
+					      (cond ((and (= x2 *gold-x*) (= y2 *gold-y*))
+						     (set! *gold-x* x)
+						     (set! *gold-y* y)))
+					      
+					      (exit copy)))
+					   (#t
+					    (format #t "will not fit , moving ~a into ~a ~%" used2 size)
+					    (exit (list "will not fit " used2 size))
+					    ))))))))))
+	 #f))))
+
+  
+    #|
+    
+  (define func-down
+    (lambda (grid)
+      (call/cc
+       (lambda (exit) 
+	 (cond
+	  ((< *current-y* *height*)
+	   (format #t "*current-y* < height  ~%")		 
+	   (let* ((x *current-x*)(y *current-y*)(x2 x)(y2 (+ y 1)))
+	     (let ((expr (g:xy grid x y))
+		   (expr2 (g:xy grid x2 y2)))
+	       (format #t "expr : ~A ~%" expr)
+	       (format #t "expr2 : ~A ~%" expr2)		     
+	       (match expr (('used used 'size size)
+			    (format #t "match expr : ~A : used=~a : size = ~a ~%" expr used size)
+			    (match expr2 (('used used2 'size size2)
+					  (format #t "<inner expr2 match okay>  ~%")
+					  (cond
+					   ((and (<= used size2) (<= used2 size))
+					    (format #t "<inner expr2 match okay>  ~%")
+					    (let ((copy (g:copy grid)))
+					      (g:xy! copy x y `(used ,used2 size ,size))
+					      (g:xy! copy x2 y2 `(used ,used size ,size2))
+
+					      ;; hole is at x , y
+					      ;; gold is at x2 y2 ... gold is now at x y
+					      (cond ((and (= x2 *gold-x*) (= y2 *gold-y*))
+						     (set! *gold-x* x)
+						     (set! *gold-y* y)))
+
+					      
+					      (exit copy)))
+					   (#t
+					    (format #t "will not fit , moving ~a into ~a ~%" used2 size)
+					    (exit (list "will not fit " used2 size))
+					    ))))))))))
+	 #f))))
+  
+
+
+  (define func-left
+    (lambda (grid)
+      (call/cc
+       (lambda (exit) 
+	 (cond
+	  ((> *current-x* 1)
+	   (format #t "*current-x* > 1  ~%")		 
+	   (let* ((x *current-x*)(y *current-y*)(x2 (- x 1))(y2 y))
+	     (let ((expr (g:xy x y))
+		   (expr2 (g:xy x2 y2)))
+	       (format #t "expr : ~A ~%" expr)
+	       (format #t "expr2 : ~A ~%" expr2)		     
+	       (match expr (('used used 'size size)
+			    (format #t "match expr : ~A : used=~a : size = ~a ~%" expr used size)
+			    (match expr2 (('used used2 'size size2)
+					  (format #t "<inner expr2 match okay>  ~%")
+					  (cond
+					   ((and (<= used size2) (<= used2 size))
+					    (format #t "<inner expr2 match okay>  ~%")
+					    (let ((copy (g:copy grid)))
+					      (g:xy! copy x y `(used ,used2 size ,size))
+					      (g:xy! copy x2 y2 `(used ,used size ,size2))
+
+					      ;; hole is at x , y
+					      ;; gold is at x2 y2 ... gold is now at x y
+					      (cond ((and (= x2 *gold-x*) (= y2 *gold-y*))
+						     (set! *gold-x* x)
+						     (set! *gold-y* y)))					      
+					      
+					      (exit copy)))
+					   (#t
+					    (format #t "will not fit , moving ~a into ~a ~%" used2 size)
+					    (exit (list "will not fit " used2 size))))))))))))
+	 #f))))
+  
+  (define func-right
+    (lambda (grid)
+      (call/cc
+       (lambda (exit) 
+	 (cond
+	  ((< *current-x* *width*)
+	   (format #t "*current-x* < width  ~%")		 
+	   (let* ((x *current-x*)(y *current-y*)(x2 (+ x 1))(y2 y))
+	     (let ((expr (g:xy x y))
+		   (expr2 (g:xy x2 y2)))
+	       (format #t "expr : ~A ~%" expr)
+	       (format #t "expr2 : ~A ~%" expr2)		     
+	       (match expr (('used used 'size size)
+			    (format #t "match expr : ~A : used=~a : size = ~a ~%" expr used size)
+			    (match expr2 (('used used2 'size size2)
+					  (format #t "<inner expr2 match okay>  ~%")
+					  (cond
+					   ((and (<= used size2) (<= used2 size))
+					    (format #t "<inner expr2 match okay>  ~%")
+					    (let ((copy (g:copy grid)))
+					      (g:xy! copy x y `(used ,used2 size ,size))
+					      (g:xy! copy x2 y2 `(used ,used size ,size2))
+
+					      ;; hole is at x , y
+					      ;; gold is at x2 y2 ... gold is now at x y
+					      (cond ((and (= x2 *gold-x*) (= y2 *gold-y*))
+						     (set! *gold-x* x)
+						     (set! *gold-y* y)))
+					      
+					      (exit copy)))
+					   (#t
+					    (format #t "will not fit , moving ~a into ~a ~%" used2 size)
+					    (exit (list "will not fit " used2 size))
+					    ))))))))))
+	 #f))))
+
+    |#
+
+
+  
+  ;; (define *grid* *start-grid*)
+  ;; (define *height* (grid:grid-height *grid*))
+  ;; (define *width* (grid:grid-width *grid*))
+  ;;   
+  ;; ;; hole located at current-x current-y
+  ;; (define *current-x* 18)
+  ;; (define *current-y* 23)
+  ;; 
+  ;; ;; gold located at top left 
+  ;; (define *gold-x* (grid:grid-width *start-grid*))
+  ;; (define *gold-y* 1)
+  ;; 
+  ;; (define hole (lambda () (list *current-x* *current-y*)))
+  ;; (define gold (lambda () (list *gold-x* *gold-y*)))
+
+
