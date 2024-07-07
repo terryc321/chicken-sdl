@@ -212,31 +212,45 @@
 
 ;; some initial state
 (define *state* (d:initial-state))
+(define *steps* 0)
 
 (define well-formed-state?
   (lambda (xs)
-    (and (member 'hole xs)
-	 (member 'gold xs)
-	 (member 'grid xs))))
+    (cond
+     ((pair? xs)
+      (if xs #t #f))
+     (#t #f))))
 
+    ;; (and (member 'hole xs)
+    ;; 	 (member 'gold xs)
+    ;; 	 (member 'grid xs))))
+
+(define reset! (lambda ()
+		 (set! *steps* 0)
+		 (set! *state* (d:initial-state))))
 (define up!  (lambda () (change! d:up)))
 (define down! (lambda () (change! d:down)))
 (define left! (lambda () (change! d:left)))
 (define right! (lambda () (change! d:right)))
 (define change! (lambda (func)
-		 (let ((poss (func *state*)))
-		   (cond
-		    ((well-formed-state? poss)
-		     (set! *state* poss))))))
-
+		  (cond
+		   ((well-formed-state? *state*)
+		    (let ((poss (func *state*)))
+		      (cond
+		       ((well-formed-state? poss)
+			(set! *steps* (+ 1 *steps*))
+			(set! *state* poss))))))))
 
 
 
 
 (define draw-state!
   (lambda ()
-    (let* ((s *state*)
-	   (hole (d:hole s)) (hole-x (first hole)) (hole-y (second hole))
+    (let* ((s *state*))
+      (cond
+       ((well-formed-state? s)
+	(let*
+	   ((hole (d:hole s)) (hole-x (first hole)) (hole-y (second hole))
 	   (gold (d:gold s)) (gold-x (first gold)) (gold-y (second gold))
 	   (wid (d:wid s))   (hgt (d:hgt s)))
       (letrec ((foo (lambda (x y)
@@ -258,7 +272,8 @@
 				 (draw-text! (format #f "~a/~a" used size) (* 50 x)(* 25 y) 'normal)))
 				(foo (+ x 1) y)))))))))
 	(foo 1 1)
-	#f))))
+	#f)))))))
+
 
   
 
@@ -282,13 +297,8 @@
     
     ;; put some text
     (draw-state!)
-    
-    ;; (draw-text! (format #f "320 300") 320 300)
     ;; (draw-text! (format #f "640 300") 640 300)
-
-    
-    
-    
+     (draw-text! (format #f "STEPS [~a]" *steps*) 0 0 'normal)
     ;; Refresh the screen
     (sdl2:update-window-surface! window)))
 
@@ -361,6 +371,11 @@
             (randomize-smiley! smiley2)
             (draw-scene!))
 
+	   ;; reset!
+	   ((r)
+	    (reset!)
+            (draw-scene!))
+	   
            ;; Arrow keys control smiley2
            ((left)
             (dec! (obj-x smiley2) 20)
