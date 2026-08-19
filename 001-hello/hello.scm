@@ -1,3 +1,7 @@
+
+;; ensure sdl library is available 
+;; chicken-install -s sdl2
+
 ;; Compatible with both CHICKEN 4 and CHICKEN 5.
 (cond-expand
  (chicken-4 (use (prefix sdl2 "sdl2:")))

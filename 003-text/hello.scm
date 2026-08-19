@@ -8,7 +8,12 @@
 (sdl2:init!)
 (ttf:init!)
 
-(define font (ttf:open-font "/usr/local/share/fonts/comic-neue/ComicNeue-Regular.ttf" 20))
+
+;;(define font (ttf:open-font "/usr/local/share/fonts/FiraCode-Regular.ttf" 20))
+(define font (ttf:open-font "/usr/share/fonts/opentype/comic-neue/ComicNeue-Regular.otf" 20))
+
+;; this is really dumb ... need a font server .. 
+;;(define font (ttf:open-font "/usr/local/share/fonts/comic-neue/ComicNeue-Regular.ttf" 20))
 (define text "Hello, World!")
 (define-values (w h) (ttf:size-utf8 font text))
 (define window (sdl2:create-window! text 'centered 'centered w h))

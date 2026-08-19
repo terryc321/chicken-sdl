@@ -64,7 +64,8 @@
 (sdl2:init!)
 (ttf:init!)
 
-(define font (ttf:open-font "/usr/local/share/fonts/comic-neue/ComicNeue-Regular.ttf" 14))
+;; replace the font you want here ...
+(define font (ttf:open-font "/usr/share/fonts/truetype/firacode/FiraCode-Regular.ttf" 14))
 (define text "Hello, World!")
 (define-values (font-w font-h) (ttf:size-utf8 font text))
 

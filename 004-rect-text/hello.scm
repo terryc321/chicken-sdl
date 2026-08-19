@@ -9,7 +9,7 @@
 (ttf:init!)
 
 ;; works better if write exact location of font 
-(define font (ttf:open-font "/usr/local/share/fonts/comic-neue/ComicNeue-Regular.ttf" 20))
+(define font (ttf:open-font "/usr/share/fonts/truetype/firacode/FiraCode-Regular.ttf" 20))
 (define text "Hello, World!")
 (define-values (w h) (ttf:size-utf8 font text))
 
